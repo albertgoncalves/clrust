@@ -80,6 +80,22 @@ fn parse_args() -> Args {
     exit(1);
 }
 
+fn write_csv(points: &[geom::Point]) {
+    let mut csv: String = String::with_capacity(points.len() * 10);
+    csv.push_str("x,y,label");
+    for point in points {
+        if let Some(label) = point.label {
+            csv.push('\n');
+            csv.push_str(&point.x.to_string());
+            csv.push(',');
+            csv.push_str(&point.y.to_string());
+            csv.push(',');
+            csv.push_str(&label.to_string());
+        }
+    }
+    println!("{}", csv);
+}
+
 fn main() {
     if let Ok(buffer) = read_stdin() {
         let args: Args = parse_args();
@@ -94,18 +110,6 @@ fn main() {
         }
         let _centroids: Vec<geom::Point> =
             kmeans::cluster(&mut points, args.k, args.n_iter, args.seed);
-        let mut csv: String = String::with_capacity(points.len() * 10);
-        csv.push_str("x,y,label");
-        for point in points {
-            if let Some(label) = point.label {
-                csv.push('\n');
-                csv.push_str(&point.x.to_string());
-                csv.push(',');
-                csv.push_str(&point.y.to_string());
-                csv.push(',');
-                csv.push_str(&label.to_string());
-            }
-        }
-        println!("{}", csv);
+        write_csv(&points);
     }
 }
