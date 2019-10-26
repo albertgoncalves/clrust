@@ -4,15 +4,23 @@ set -e
 
 cd "$WD/rust" || exit
 if [ "$1" = "lint" ]; then
-    cargo clean
     cargo clippy -- -D warnings -W clippy::pedantic
     rustfmt -v src/main.rs
 else
     cargo build --release
-    tail -n +2 "$WD/data//input.csv" \
+    n_columns=5
+    index_x=3
+    index_y=4
+    k=5
+    n_iter=100
+    seed=0
+    output="$WD/data/output.csv"
+    rm $output || true
+    time tail -n +2 "$WD/data/input.csv" \
         | cargo run --release \
-        > "$WD/data/output.csv"
+            $n_columns $index_x $index_y $k $n_iter $seed \
+        > $output
     cd "$WD/python" || exit
-    python src/main.py "$WD/data/output.csv"
+    time python src/main.py $output
     open out/output.png
 fi
