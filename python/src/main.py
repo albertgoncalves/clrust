@@ -9,7 +9,7 @@ from matplotlib.pyplot import close, savefig, subplots, tight_layout
 import numpy as np
 from pandas import read_csv
 
-WD = "{}/python".format(environ["WD"])
+WD = environ["WD"]
 
 
 class KMeans:
@@ -95,12 +95,12 @@ def main():
             )
         ax.scatter(centroids[:, 0], centroids[:, 1], s=300, c="k", marker="X")
         tight_layout()
-        savefig("out/k_{}.png".format(k))
+        savefig("{}/python/out/k_{}.png".format(WD, k))
         close()
     _, ax = subplots()
     ax.plot(ks, sum_error)
     tight_layout()
-    savefig("out/sum_error.png")
+    savefig("{}/python/out/sum_error.png".format(WD))
     close()
 
 
