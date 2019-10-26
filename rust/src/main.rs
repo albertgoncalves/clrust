@@ -1,4 +1,5 @@
 mod geom;
+mod kmeans;
 mod test;
 
 use std::io::{stdin, Read};
@@ -24,7 +25,7 @@ fn row_to_point(
             items[column_y]
                 .parse()
                 .ok()
-                .and_then(|y| Some(geom::Point { x, y, label: 0 }))
+                .and_then(|y| Some(geom::Point { x, y, label: None }))
         });
     }
     None
@@ -44,10 +45,20 @@ fn main() {
                 points.push(point)
             }
         }
-        println!("{:#?}", points);
-        if 4 < points.len() {
-            println!("{}", geom::distance(&points[1], &points[3]));
+        let _centroids: Vec<geom::Point> =
+            kmeans::cluster(&mut points, 5, 1000, 0);
+        let mut csv: String = String::with_capacity(points.len() * 10);
+        csv.push_str("x,y,label");
+        for point in points {
+            if let Some(label) = point.label {
+                csv.push('\n');
+                csv.push_str(&point.x.to_string());
+                csv.push(',');
+                csv.push_str(&point.y.to_string());
+                csv.push(',');
+                csv.push_str(&label.to_string());
+            }
         }
-        println!("{:#?}", geom::centroids(&geom::bounds(&points), 3, 0));
+        println!("{}", csv);
     }
 }

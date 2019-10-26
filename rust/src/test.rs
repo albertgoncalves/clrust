@@ -4,10 +4,16 @@ mod test {
     fn distance() {
         macro_rules! assert_distance {
             ($ax:expr, $ay:expr, $bx:expr, $by:expr, $d:expr) => {
-                let a: crate::geom::Point =
-                    crate::geom::Point { x: $ax, y: $ay, label: 0 };
-                let b: crate::geom::Point =
-                    crate::geom::Point { x: $bx, y: $by, label: 0 };
+                let a: crate::geom::Point = crate::geom::Point {
+                    x: $ax,
+                    y: $ay,
+                    label: None,
+                };
+                let b: crate::geom::Point = crate::geom::Point {
+                    x: $bx,
+                    y: $by,
+                    label: None,
+                };
                 assert_eq!(crate::geom::distance(&a, &b), $d)
             };
         }
@@ -23,7 +29,11 @@ mod test {
             ($s:expr, $n:expr, $cx:expr, $cy:expr, $x:expr, $y:expr) => {
                 assert_eq!(
                     crate::row_to_point($s, $n, $cx, $cy),
-                    Some(crate::geom::Point { x: $x, y: $y, label: 0 }),
+                    Some(crate::geom::Point {
+                        x: $x,
+                        y: $y,
+                        label: None,
+                    }),
                 );
             };
             ($s:expr, $n:expr, $cx:expr, $cy:expr) => {
@@ -42,10 +52,26 @@ mod test {
     fn bounds() {
         assert_eq!(
             crate::geom::bounds(&[
-                crate::geom::Point { x: 0.0, y: 1.0, label: 0 },
-                crate::geom::Point { x: 9.0, y: -1.0, label: 0 },
-                crate::geom::Point { x: -3.0, y: 10.0, label: 0 },
-                crate::geom::Point { x: 12.0, y: 5.0, label: 0 },
+                crate::geom::Point {
+                    x: 0.0,
+                    y: 1.0,
+                    label: None,
+                },
+                crate::geom::Point {
+                    x: 9.0,
+                    y: -1.0,
+                    label: None,
+                },
+                crate::geom::Point {
+                    x: -3.0,
+                    y: 10.0,
+                    label: None,
+                },
+                crate::geom::Point {
+                    x: 12.0,
+                    y: 5.0,
+                    label: None,
+                },
             ]),
             crate::geom::Bounds {
                 min_x: -3.0,
