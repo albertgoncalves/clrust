@@ -1,0 +1,11 @@
+*
+!.gitignore
+!*.nix
+!shell
+!.shellhook
+!src/
+!rust/
+!*.toml
+!*.rs
+!python/
+!*.py
