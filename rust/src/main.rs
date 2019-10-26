@@ -46,9 +46,9 @@ fn row_to_point(
 fn bounds(points: &[Point]) -> Bounds {
     let mut bounds = Bounds {
         min_x: f32::MAX,
-        max_x: 0.0,
+        max_x: f32::MIN,
         min_y: f32::MAX,
-        max_y: 0.0,
+        max_y: f32::MIN,
     };
     for point in points {
         if point.x < bounds.min_x {
