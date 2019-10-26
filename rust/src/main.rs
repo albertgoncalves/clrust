@@ -3,6 +3,7 @@ mod test;
 
 use std::io::{stdin, Read};
 
+const DELIMITER: char = ',';
 const N: usize = 5; /* # of columns */
 const COLUMN_X: usize = 3; /* zero-index of X column */
 const COLUMN_Y: usize = 4; /*           ... Y column */
@@ -13,7 +14,7 @@ fn row_to_point(
     column_x: usize,
     column_y: usize,
 ) -> Option<geom::Point> {
-    let items: Vec<&str> = row.split(',').collect::<Vec<&str>>();
+    let items: Vec<&str> = row.split(DELIMITER).collect::<Vec<&str>>();
     if (items.len() == n)
         && (column_x != column_y)
         && (column_x < n)
@@ -23,7 +24,7 @@ fn row_to_point(
             items[column_y]
                 .parse()
                 .ok()
-                .and_then(|y| Some(geom::Point { x, y }))
+                .and_then(|y| Some(geom::Point { x, y, label: 0 }))
         });
     }
     None
@@ -47,6 +48,6 @@ fn main() {
         if 4 < points.len() {
             println!("{}", geom::distance(&points[1], &points[3]));
         }
-        println!("{:?}", geom::centroids(&geom::bounds(&points), 5, 0));
+        println!("{:#?}", geom::centroids(&geom::bounds(&points), 3, 0));
     }
 }

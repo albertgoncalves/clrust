@@ -6,6 +6,7 @@ use std::f32;
 pub struct Point {
     pub x: f32,
     pub y: f32,
+    pub label: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -46,11 +47,18 @@ pub fn distance(a: &Point, b: &Point) -> f32 {
     ((x * x) + (y * y)).sqrt()
 }
 
-pub fn centroids(bounds: &Bounds, _k: usize, seed: u64) -> Vec<Point> {
-    let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
-    let x_uniform = UniformFloat::<f32>::new(bounds.min_x, bounds.max_x);
-    let y_uniform = UniformFloat::<f32>::new(bounds.min_y, bounds.max_y);
-    let x: f32 = x_uniform.sample(&mut rng);
-    let y: f32 = y_uniform.sample(&mut rng);
-    vec![Point { x, y }]
+pub fn centroids(bounds: &Bounds, k: usize, seed: u64) -> Vec<Point> {
+    if 0 < k {
+        let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
+        let x_uniform = UniformFloat::<f32>::new(bounds.min_x, bounds.max_x);
+        let y_uniform = UniformFloat::<f32>::new(bounds.min_y, bounds.max_y);
+        let mut centroids: Vec<Point> = Vec::with_capacity(k);
+        for _ in 0..k {
+            let x: f32 = x_uniform.sample(&mut rng);
+            let y: f32 = y_uniform.sample(&mut rng);
+            centroids.push(Point { x, y, label: 0 });
+        }
+        return centroids;
+    }
+    Vec::new()
 }
