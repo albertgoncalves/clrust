@@ -4,9 +4,7 @@ let
         (python37.withPackages(ps: with ps; [
             flake8
             matplotlib
-            numpy
             pandas
-            pytest
         ]))
         csvkit
         rustup
