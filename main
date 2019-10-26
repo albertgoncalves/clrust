@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd "$WD/rust" || exit
+if [ "$1" = "lint" ]; then
+    cargo clean
+    cargo clippy -- -D warnings -W clippy::pedantic
+    rustfmt -v src/main.rs
+else
+    cargo build --release
+    tail -n +2 "$WD/data//input.csv" \
+        | cargo run --release \
+        > "$WD/data/output.csv"
+    cd "$WD/python" || exit
+    python src/main.py "$WD/data/output.csv"
+    open out/output.png
+fi

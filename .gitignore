@@ -10,4 +10,6 @@
 !*.rs
 !python/
 !*.py
+!data/
 !input.csv
+!main
