@@ -4,8 +4,10 @@
 !shell
 !.shellhook
 !src/
+!out/
 !rust/
 !*.toml
 !*.rs
 !python/
 !*.py
+!data.csv
