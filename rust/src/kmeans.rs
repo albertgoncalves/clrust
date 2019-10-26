@@ -43,9 +43,10 @@ fn adjust_centroids(
     k: usize,
 ) {
     if 0 < k {
+        let n: usize = points.len();
         let mut cohorts: Vec<(Vec<f32>, Vec<f32>)> = Vec::with_capacity(k);
         for _ in 0..k {
-            cohorts.push((Vec::new(), Vec::new()));
+            cohorts.push((Vec::with_capacity(n), Vec::with_capacity(n)));
         }
         for point in points {
             if let Some(i) = point.label {
