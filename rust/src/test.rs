@@ -35,4 +35,22 @@ mod test {
         assert_row_to_point!("0,1,2,3", 4, 0, 0);
         assert_row_to_point!("0,1,2,3", 4, 1, 4);
     }
+
+    #[test]
+    fn bounds() {
+        assert_eq!(
+            crate::bounds(&[
+                crate::Point { x: 0.0, y: 1.0 },
+                crate::Point { x: 9.0, y: -1.0 },
+                crate::Point { x: -3.0, y: 10.0 },
+                crate::Point { x: 12.0, y: 5.0 },
+            ]),
+            crate::Bounds {
+                min_x: -3.0,
+                max_x: 12.0,
+                min_y: -1.0,
+                max_y: 10.0,
+            }
+        );
+    }
 }

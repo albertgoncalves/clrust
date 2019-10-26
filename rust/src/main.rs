@@ -1,5 +1,6 @@
 mod test;
 
+use std::f32;
 use std::io::{stdin, Read};
 
 const N: usize = 5; /* # of columns */
@@ -10,6 +11,14 @@ const COLUMN_Y: usize = 4; /*           ... Y column */
 struct Point {
     x: f32,
     y: f32,
+}
+
+#[derive(Debug, PartialEq)]
+struct Bounds {
+    min_x: f32,
+    max_x: f32,
+    min_y: f32,
+    max_y: f32,
 }
 
 fn row_to_point(
@@ -32,6 +41,30 @@ fn row_to_point(
         });
     }
     None
+}
+
+fn bounds(points: &[Point]) -> Bounds {
+    let mut bounds = Bounds {
+        min_x: f32::MAX,
+        max_x: 0.0,
+        min_y: f32::MAX,
+        max_y: 0.0,
+    };
+    for point in points {
+        if point.x < bounds.min_x {
+            bounds.min_x = point.x
+        }
+        if bounds.max_x < point.x {
+            bounds.max_x = point.x
+        }
+        if point.y < bounds.min_y {
+            bounds.min_y = point.y
+        }
+        if bounds.max_y < point.y {
+            bounds.max_y = point.y
+        }
+    }
+    bounds
 }
 
 fn distance(a: &Point, b: &Point) -> f32 {
@@ -58,5 +91,6 @@ fn main() {
         if 4 < points.len() {
             println!("{}", distance(&points[1], &points[3]));
         }
+        println!("{:?}", bounds(&points));
     }
 }
