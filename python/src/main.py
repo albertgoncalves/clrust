@@ -13,7 +13,7 @@ def main():
     if 1 < len(argv):
         points = read_csv(argv[1])
         cmap = cm.get_cmap(
-            "Dark2",
+            "tab20",
             1 + points.label.max() - points.label.min(),
         )
         points["color"] = points.label.map(lambda label: cmap(label))

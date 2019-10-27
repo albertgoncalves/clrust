@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::f32;
 
 #[derive(Clone, Copy, Debug, PartialEq)]

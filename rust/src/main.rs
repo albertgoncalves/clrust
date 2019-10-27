@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod geom;
 mod kmeans;
 mod test;
@@ -82,14 +84,18 @@ fn parse_args() -> Args {
 
 fn write_csv(points: &[geom::Point]) {
     let mut csv: String = String::with_capacity(points.len() * 10);
-    csv.push_str("x,y,label");
+    csv.push('x');
+    csv.push(DELIMITER);
+    csv.push('y');
+    csv.push(DELIMITER);
+    csv.push_str("label");
     for point in points {
         if let Some(label) = point.label {
             csv.push('\n');
             csv.push_str(&point.x.to_string());
-            csv.push(',');
+            csv.push(DELIMITER);
             csv.push_str(&point.y.to_string());
-            csv.push(',');
+            csv.push(DELIMITER);
             csv.push_str(&label.to_string());
         }
     }

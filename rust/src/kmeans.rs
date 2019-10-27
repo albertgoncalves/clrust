@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::geom;
 use rand::distributions::uniform::{UniformFloat, UniformSampler};
 use rand::distributions::{Distribution, WeightedIndex};
