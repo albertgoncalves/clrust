@@ -23,5 +23,9 @@ else
         > "$output"
     cd "$WD/python" || exit
     time python src/main.py "$output"
-    open out/output.png
+    if [ "$(uname -s)" = "Darwin" ]; then
+        open out/output.png
+    else
+        xdg-open out/output.png
+    fi
 fi
