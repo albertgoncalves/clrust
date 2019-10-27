@@ -20,9 +20,11 @@ fn centroids(bounds: &geom::Bounds, k: usize, seed: u64) -> Vec<geom::Point> {
         let y_uniform: UniformFloat<f32> =
             UniformFloat::<f32>::new(bounds.min_y, bounds.max_y);
         for _ in 0..k {
-            let x: f32 = x_uniform.sample(&mut rng);
-            let y: f32 = y_uniform.sample(&mut rng);
-            centroids.push(geom::Point { x, y, label: None });
+            centroids.push(geom::Point {
+                x: x_uniform.sample(&mut rng),
+                y: y_uniform.sample(&mut rng),
+                label: None,
+            });
         }
     }
     centroids
@@ -100,7 +102,7 @@ fn update_centroids(
                     y: average_f32(&cohorts[i].1),
                     label: None,
                 };
-                delta += geom::distance(&update, &centroids[i]);
+                delta += geom::distance(&centroids[i], &update);
                 centroids[i] = update;
             }
         }
