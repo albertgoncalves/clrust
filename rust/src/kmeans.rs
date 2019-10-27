@@ -47,7 +47,8 @@ fn centroids_plus_plus(
             for j in 0..n {
                 let mut distance: f32 = f32::MAX;
                 for centroid in &centroids {
-                    let candidate: f32 = geom::distance(&points[j], &centroid);
+                    let candidate: f32 =
+                        geom::distance(&points[j], &centroid).powi(2);
                     if candidate < distance {
                         distance = candidate
                     }
