@@ -1,6 +1,8 @@
+#![allow(dead_code)]
+
 use std::f32;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point {
     pub x: f32,
     pub y: f32,

@@ -13,7 +13,7 @@ struct Args {
     index_x: usize,
     index_y: usize,
     k: usize,
-    n_iter: usize,
+    threshold: f32,
     seed: u64,
 }
 
@@ -52,14 +52,14 @@ fn parse_args() -> Args {
             Ok(index_x),
             Ok(index_y),
             Ok(k),
-            Ok(n_iter),
+            Ok(threshold),
             Ok(seed),
         ) = (
             args[1].parse::<usize>(),
             args[2].parse::<usize>(),
             args[3].parse::<usize>(),
             args[4].parse::<usize>(),
-            args[5].parse::<usize>(),
+            args[5].parse::<f32>(),
             args[6].parse::<u64>(),
         ) {
             return Args {
@@ -67,14 +67,14 @@ fn parse_args() -> Args {
                 index_x,
                 index_y,
                 k,
-                n_iter,
+                threshold,
                 seed,
             };
         }
     }
     eprintln!(
         "usage: {} <n_columns: int> <index_x: int> <index_y: int> <k: int> \
-         <n_iter:int> <seed:int>",
+         <threshold:float> <seed:int>",
         &args[0]
     );
     exit(1);
@@ -109,7 +109,7 @@ fn main() {
             }
         }
         let _centroids: Vec<geom::Point> =
-            kmeans::cluster(&mut points, args.k, args.n_iter, args.seed);
+            kmeans::cluster(&mut points, args.k, args.threshold, args.seed);
         write_csv(&points);
     }
 }

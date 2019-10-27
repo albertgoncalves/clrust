@@ -5,6 +5,7 @@ let
             flake8
             matplotlib
             pandas
+            scikitlearn
         ]))
         csvkit
         rustup

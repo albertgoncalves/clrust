@@ -1,22 +1,62 @@
+#![allow(dead_code)]
+
 use crate::geom;
 use rand::distributions::uniform::{UniformFloat, UniformSampler};
+use rand::distributions::{Distribution, WeightedIndex};
 use rand::prelude::{SeedableRng, StdRng};
 use std::f32;
 
 fn centroids(bounds: &geom::Bounds, k: usize, seed: u64) -> Vec<geom::Point> {
+    let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
     if 0 < k {
         let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
         let x_uniform = UniformFloat::<f32>::new(bounds.min_x, bounds.max_x);
         let y_uniform = UniformFloat::<f32>::new(bounds.min_y, bounds.max_y);
-        let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
         for _ in 0..k {
             let x: f32 = x_uniform.sample(&mut rng);
             let y: f32 = y_uniform.sample(&mut rng);
             centroids.push(geom::Point { x, y, label: None });
         }
-        return centroids;
     }
-    Vec::new()
+    centroids
+}
+
+/* https://en.wikipedia.org/wiki/K-means%2B%2B */
+fn centroids_plus_plus(
+    points: &[geom::Point],
+    k: usize,
+    seed: u64,
+) -> Vec<geom::Point> {
+    let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
+    let n: usize = points.len();
+    let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
+    let mut weights: Vec<f32> = Vec::with_capacity(n);
+    for i in 0..k {
+        if i == 0 {
+            for _ in 0..n {
+                weights.push(1.0);
+            }
+        } else {
+            for j in 0..n {
+                let mut distance: f32 = f32::MAX;
+                for centroid in &centroids {
+                    let next: f32 = geom::distance(&points[j], &centroid);
+                    if next < distance {
+                        distance = next
+                    }
+                }
+                weights[j] = distance;
+            }
+            let total = weights.iter().sum::<f32>();
+            weights = weights
+                .iter_mut()
+                .map(|&mut w| w / total)
+                .collect::<Vec<f32>>();
+        }
+        let indices = WeightedIndex::new(&weights).unwrap();
+        centroids.push(points[indices.sample(&mut rng)]);
+    }
+    centroids
 }
 
 fn label_points(points: &mut Vec<geom::Point>, centroids: &[geom::Point]) {
@@ -41,7 +81,8 @@ fn adjust_centroids(
     points: &[geom::Point],
     centroids: &mut Vec<geom::Point>,
     k: usize,
-) {
+) -> f32 {
+    let mut delta: f32 = 0.0;
     if 0 < k {
         let n: usize = points.len();
         let mut cohorts: Vec<(Vec<f32>, Vec<f32>)> = Vec::with_capacity(k);
@@ -56,27 +97,36 @@ fn adjust_centroids(
         }
         for i in 0..k {
             if !cohorts[i].0.is_empty() {
-                centroids[i] = geom::Point {
+                let update: geom::Point = geom::Point {
                     x: average_f32(&cohorts[i].0),
                     y: average_f32(&cohorts[i].1),
                     label: None,
                 };
+                delta += geom::distance(&update, &centroids[i]);
+                centroids[i] = update;
             }
         }
     }
+    delta
 }
 
 pub fn cluster(
     points: &mut Vec<geom::Point>,
     k: usize,
-    n: usize,
+    threshold: f32,
     seed: u64,
 ) -> Vec<geom::Point> {
     let mut centroids: Vec<geom::Point> =
-        centroids(&geom::bounds(points), k, seed);
-    for _ in 0..n {
+        centroids_plus_plus(&points, k, seed);
+    let mut i: usize = 0;
+    loop {
         label_points(points, &centroids);
-        adjust_centroids(&points, &mut centroids, k);
+        if adjust_centroids(&points, &mut centroids, k) < threshold {
+            break;
+        } else {
+            i += 1;
+        }
     }
+    eprintln!("# of iterations: {}", i);
     centroids
 }
