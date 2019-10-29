@@ -111,8 +111,8 @@ fn main() {
                 ys.push(y);
             }
         }
-        math::unit_scale(&mut xs);
-        math::unit_scale(&mut ys);
+        math::unit_scale_f32(&mut xs);
+        math::unit_scale_f32(&mut ys);
         let m: usize = xs.len();
         let (labels, iterations, error): (Vec<usize>, u16, f32) =
             kmeans::cluster(&xs, &ys, m, args.k, args.threshold, args.seed);
