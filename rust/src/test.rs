@@ -4,17 +4,11 @@ mod test {
     fn distance() {
         macro_rules! assert_distance {
             ($ax:expr, $ay:expr, $bx:expr, $by:expr, $d:expr) => {
-                let a: crate::geom::Point = crate::geom::Point {
-                    x: $ax,
-                    y: $ay,
-                    label: None,
-                };
-                let b: crate::geom::Point = crate::geom::Point {
-                    x: $bx,
-                    y: $by,
-                    label: None,
-                };
-                assert_eq!(crate::geom::distance(&a, &b), $d)
+                let a: crate::geom::Point =
+                    crate::geom::Point { x: $ax, y: $ay };
+                let b: crate::geom::Point =
+                    crate::geom::Point { x: $bx, y: $by };
+                assert_eq!(crate::geom::distance(a, b), $d)
             };
         }
         assert_distance!(0.0, 0.0, 3.0, 4.0, 5.0);
@@ -29,11 +23,7 @@ mod test {
             ($s:expr, $n:expr, $cx:expr, $cy:expr, $x:expr, $y:expr) => {
                 assert_eq!(
                     crate::row_to_point($s, $n, $cx, $cy),
-                    Some(crate::geom::Point {
-                        x: $x,
-                        y: $y,
-                        label: None,
-                    }),
+                    Some(($x, $y)),
                 );
             };
             ($s:expr, $n:expr, $cx:expr, $cy:expr) => {
@@ -52,26 +42,10 @@ mod test {
     fn bounds() {
         assert_eq!(
             crate::geom::bounds(&[
-                crate::geom::Point {
-                    x: 0.0,
-                    y: 1.0,
-                    label: None,
-                },
-                crate::geom::Point {
-                    x: 9.0,
-                    y: -1.0,
-                    label: None,
-                },
-                crate::geom::Point {
-                    x: -3.0,
-                    y: 10.0,
-                    label: None,
-                },
-                crate::geom::Point {
-                    x: 12.0,
-                    y: 5.0,
-                    label: None,
-                },
+                crate::geom::Point { x: 0.0, y: 1.0 },
+                crate::geom::Point { x: 9.0, y: -1.0 },
+                crate::geom::Point { x: -3.0, y: 10.0 },
+                crate::geom::Point { x: 12.0, y: 5.0 },
             ]),
             crate::geom::Bounds {
                 min_x: -3.0,
@@ -80,5 +54,17 @@ mod test {
                 max_y: 10.0,
             }
         );
+    }
+
+    #[test]
+    fn average_f32() {
+        assert_eq!(crate::math::average_f32(&[1.0, 2.0, 3.0]), Some(2.0));
+        assert_eq!(crate::math::average_f32(&[]), None);
+    }
+
+    #[test]
+    fn std_dev_f32() {
+        assert_eq!(crate::math::std_dev_f32(&[1.0, 2.0]), Some(0.5));
+        assert_eq!(crate::math::std_dev_f32(&[]), None);
     }
 }

@@ -4,9 +4,9 @@ use std::f32;
 pub struct Point {
     pub x: f32,
     pub y: f32,
-    pub label: Option<usize>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, PartialEq)]
 pub struct Bounds {
     pub min_x: f32,
@@ -15,8 +15,9 @@ pub struct Bounds {
     pub max_y: f32,
 }
 
+#[allow(dead_code)]
 pub fn bounds(points: &[Point]) -> Bounds {
-    let mut bounds = Bounds {
+    let mut bounds: Bounds = Bounds {
         min_x: f32::MAX,
         max_x: f32::MIN,
         min_y: f32::MAX,
@@ -39,7 +40,7 @@ pub fn bounds(points: &[Point]) -> Bounds {
     bounds
 }
 
-pub fn distance(a: &Point, b: &Point) -> f32 {
+pub fn distance(a: Point, b: Point) -> f32 {
     let x: f32 = a.x - b.x;
     let y: f32 = a.y - b.y;
     ((x * x) + (y * y)).sqrt()

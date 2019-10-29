@@ -1,7 +1,6 @@
-#![allow(dead_code)]
-
 mod geom;
 mod kmeans;
+mod math;
 mod test;
 
 use std::env;
@@ -24,7 +23,7 @@ fn row_to_point(
     n: usize,
     index_x: usize,
     index_y: usize,
-) -> Option<geom::Point> {
+) -> Option<(f32, f32)> {
     let items: Vec<&str> = row.split(DELIMITER).collect::<Vec<&str>>();
     if (items.len() == n)
         && (index_x != index_y)
@@ -32,10 +31,7 @@ fn row_to_point(
         && (index_y < n)
     {
         return items[index_x].parse().ok().and_then(|x| {
-            items[index_y]
-                .parse()
-                .ok()
-                .and_then(|y| Some(geom::Point { x, y, label: None }))
+            items[index_y].parse().ok().and_then(|y| Some((x, y)))
         });
     }
     None
@@ -82,22 +78,20 @@ fn parse_args() -> Args {
     exit(1);
 }
 
-fn write_csv(points: &[geom::Point]) {
-    let mut csv: String = String::with_capacity(points.len() * 10);
+fn write_csv(xs: &[f32], ys: &[f32], labels: &[usize], n: usize) {
+    let mut csv: String = String::with_capacity(n * 10);
     csv.push('x');
     csv.push(DELIMITER);
     csv.push('y');
     csv.push(DELIMITER);
     csv.push_str("label");
-    for point in points {
-        if let Some(label) = point.label {
-            csv.push('\n');
-            csv.push_str(&point.x.to_string());
-            csv.push(DELIMITER);
-            csv.push_str(&point.y.to_string());
-            csv.push(DELIMITER);
-            csv.push_str(&label.to_string());
-        }
+    for i in 0..n {
+        csv.push('\n');
+        csv.push_str(&xs[i].to_string());
+        csv.push(DELIMITER);
+        csv.push_str(&ys[i].to_string());
+        csv.push(DELIMITER);
+        csv.push_str(&labels[i].to_string());
     }
     println!("{}", csv);
 }
@@ -106,16 +100,23 @@ fn main() {
     if let Ok(buffer) = read_stdin() {
         let args: Args = parse_args();
         let lines: Vec<&str> = buffer.split('\n').collect::<Vec<&str>>();
-        let mut points: Vec<geom::Point> = Vec::with_capacity(lines.len());
+        let n: usize = lines.len();
+        let mut xs: Vec<f32> = Vec::with_capacity(n);
+        let mut ys: Vec<f32> = Vec::with_capacity(n);
         for line in lines {
-            if let Some(point) =
+            if let Some((x, y)) =
                 row_to_point(line, args.n_columns, args.index_x, args.index_y)
             {
-                points.push(point)
+                xs.push(x);
+                ys.push(y);
             }
         }
-        let _centroids: Vec<geom::Point> =
-            kmeans::cluster(&mut points, args.k, args.threshold, args.seed);
-        write_csv(&points);
+        math::unit_scale(&mut xs);
+        math::unit_scale(&mut ys);
+        let m: usize = xs.len();
+        let (labels, iterations, error): (Vec<usize>, u16, f32) =
+            kmeans::cluster(&xs, &ys, m, args.k, args.threshold, args.seed);
+        eprintln!("# of iterations: {}\nerror: {}", iterations, error);
+        write_csv(&xs, &ys, &labels, m);
     }
 }

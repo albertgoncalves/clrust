@@ -1,14 +1,11 @@
 use crate::geom;
+use crate::math;
 use rand::distributions::uniform::{UniformFloat, UniformSampler};
 use rand::distributions::{Distribution, WeightedIndex};
 use rand::prelude::{SeedableRng, StdRng};
 use std::f32;
 
-#[allow(clippy::cast_precision_loss)]
-fn average_f32(xs: &[f32]) -> f32 {
-    (xs.iter().sum::<f32>()) / (xs.len() as f32)
-}
-
+#[allow(dead_code)]
 fn centroids(bounds: &geom::Bounds, k: usize, seed: u64) -> Vec<geom::Point> {
     let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
     if 0 < k {
@@ -21,7 +18,6 @@ fn centroids(bounds: &geom::Bounds, k: usize, seed: u64) -> Vec<geom::Point> {
             centroids.push(geom::Point {
                 x: x_uniform.sample(&mut rng),
                 y: y_uniform.sample(&mut rng),
-                label: None,
             });
         }
     }
@@ -30,12 +26,13 @@ fn centroids(bounds: &geom::Bounds, k: usize, seed: u64) -> Vec<geom::Point> {
 
 /* https://en.wikipedia.org/wiki/K-means%2B%2B */
 fn centroids_plus_plus(
-    points: &[geom::Point],
+    xs: &[f32],
+    ys: &[f32],
+    n: usize,
     k: usize,
     seed: u64,
 ) -> Vec<geom::Point> {
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
-    let n: usize = points.len();
     let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
     let mut weights: Vec<f32> = Vec::with_capacity(n);
     for i in 0..k {
@@ -47,7 +44,10 @@ fn centroids_plus_plus(
             for j in 0..n {
                 let mut distance: f32 = f32::MAX;
                 for centroid in &centroids {
-                    let candidate: f32 = geom::distance(&points[j], &centroid);
+                    let candidate: f32 = geom::distance(
+                        geom::Point { x: xs[j], y: ys[j] },
+                        *centroid,
+                    );
                     if candidate < distance {
                         distance = candidate
                     }
@@ -55,20 +55,30 @@ fn centroids_plus_plus(
                 weights[j] = distance;
             }
         }
-        centroids.push(
-            points[WeightedIndex::new(&weights).unwrap().sample(&mut rng)],
-        );
+        let index: usize =
+            WeightedIndex::new(&weights).unwrap().sample(&mut rng);
+        centroids.push(geom::Point {
+            x: xs[index],
+            y: ys[index],
+        });
     }
     centroids
 }
 
-fn label_points(points: &mut Vec<geom::Point>, centroids: &[geom::Point]) {
-    for point in points {
+fn label_points(
+    xs: &[f32],
+    ys: &[f32],
+    labels: &mut Vec<usize>,
+    n: usize,
+    centroids: &[geom::Point],
+) {
+    for i in 0..n {
         let mut distance: f32 = f32::MAX;
-        for (i, centroid) in centroids.iter().enumerate() {
-            let centroid_distance: f32 = geom::distance(point, centroid);
+        for (j, centroid) in centroids.iter().enumerate() {
+            let centroid_distance: f32 =
+                geom::distance(geom::Point { x: xs[i], y: ys[i] }, *centroid);
             if centroid_distance < distance {
-                point.label = Some(i);
+                labels[i] = j;
                 distance = centroid_distance;
             }
         }
@@ -76,31 +86,32 @@ fn label_points(points: &mut Vec<geom::Point>, centroids: &[geom::Point]) {
 }
 
 fn update_centroids(
-    points: &[geom::Point],
+    xs: &[f32],
+    ys: &[f32],
+    labels: &[usize],
+    n: usize,
     centroids: &mut Vec<geom::Point>,
     k: usize,
 ) -> f32 {
     let mut delta: f32 = 0.0;
     if 0 < k {
-        let n: usize = points.len();
-        let mut cohorts: Vec<(Vec<f32>, Vec<f32>)> = Vec::with_capacity(k);
+        let mut x_cohorts: Vec<Vec<f32>> = Vec::with_capacity(k);
+        let mut y_cohorts: Vec<Vec<f32>> = Vec::with_capacity(k);
         for _ in 0..k {
-            cohorts.push((Vec::with_capacity(n), Vec::with_capacity(n)));
+            x_cohorts.push(Vec::with_capacity(n));
+            y_cohorts.push(Vec::with_capacity(n));
         }
-        for point in points {
-            if let Some(i) = point.label {
-                cohorts[i].0.push(point.x);
-                cohorts[i].1.push(point.y);
-            }
+        for i in 0..n {
+            x_cohorts[labels[i]].push(xs[i]);
+            y_cohorts[labels[i]].push(ys[i]);
         }
         for i in 0..k {
-            if !cohorts[i].0.is_empty() {
-                let update: geom::Point = geom::Point {
-                    x: average_f32(&cohorts[i].0),
-                    y: average_f32(&cohorts[i].1),
-                    label: None,
-                };
-                delta += geom::distance(&centroids[i], &update);
+            if let (Some(x), Some(y)) = (
+                math::average_f32(&x_cohorts[i]),
+                math::average_f32(&y_cohorts[i]),
+            ) {
+                let update: geom::Point = geom::Point { x, y };
+                delta += geom::distance(centroids[i], update);
                 centroids[i] = update;
             }
         }
@@ -109,22 +120,36 @@ fn update_centroids(
 }
 
 pub fn cluster(
-    points: &mut Vec<geom::Point>,
+    xs: &[f32],
+    ys: &[f32],
+    n: usize,
     k: usize,
     threshold: f32,
     seed: u64,
-) -> Vec<geom::Point> {
+) -> (Vec<usize>, u16, f32) {
+    let mut labels: Vec<usize> = Vec::with_capacity(n);
+    for _ in 0..n {
+        labels.push(0);
+    }
     let mut centroids: Vec<geom::Point> =
-        centroids_plus_plus(&points, k, seed);
-    let mut i: usize = 0;
+        centroids_plus_plus(xs, ys, n, k, seed);
+    let mut iterations: u16 = 0;
     loop {
-        label_points(points, &centroids);
-        if update_centroids(&points, &mut centroids, k) < threshold {
+        label_points(xs, ys, &mut labels, n, &centroids);
+        if update_centroids(xs, ys, &labels, n, &mut centroids, k) < threshold
+        {
             break;
         } else {
-            i += 1;
+            iterations += 1;
         }
     }
-    eprintln!("# of iterations: {}", i);
-    centroids
+    let mut error: f32 = 0.0;
+    for i in 0..n {
+        let distance: f32 = geom::distance(
+            geom::Point { x: xs[i], y: ys[i] },
+            centroids[labels[i]],
+        );
+        error += distance * distance;
+    }
+    (labels, iterations, error)
 }
