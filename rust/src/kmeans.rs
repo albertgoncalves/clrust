@@ -26,48 +26,49 @@ fn centroids(bounds: &geom::Bounds, k: usize, seed: u64) -> Vec<geom::Point> {
 
 /* https://en.wikipedia.org/wiki/K-means%2B%2B */
 fn centroids_plus_plus(
-    xs: &[f32],
-    ys: &[f32],
+    xs: &[f32], /* xs.len() == n */
+    ys: &[f32], /* ys.len() == n */
     n: usize,
     k: usize,
     seed: u64,
 ) -> Vec<geom::Point> {
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
     let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
-    let mut weights: Vec<f32> = Vec::with_capacity(n);
-    for i in 0..k {
-        if i == 0 {
-            for _ in 0..n {
-                weights.push(1.0);
-            }
-        } else {
-            for j in 0..n {
-                let mut distance: f32 = f32::MAX;
-                for centroid in &centroids {
-                    let candidate: f32 = geom::distance(
-                        geom::Point { x: xs[j], y: ys[j] },
-                        *centroid,
-                    ).powi(2);
-                    if candidate < distance {
-                        distance = candidate
-                    }
+    let mut weights: Vec<f32> = vec![1.0; n];
+    macro_rules! random_centroid {
+        () => {
+            let index: usize =
+                WeightedIndex::new(&weights).unwrap().sample(&mut rng);
+            centroids.push(geom::Point {
+                x: xs[index],
+                y: ys[index],
+            });
+        };
+    }
+    random_centroid!();
+    for _ in 1..k {
+        for j in 0..n {
+            let mut distance: f32 = f32::MAX;
+            for centroid in &centroids {
+                let candidate: f32 = geom::distance(
+                    geom::Point { x: xs[j], y: ys[j] },
+                    *centroid,
+                )
+                .powi(2);
+                if candidate < distance {
+                    distance = candidate
                 }
-                weights[j] = distance;
             }
+            weights[j] = distance;
         }
-        let index: usize =
-            WeightedIndex::new(&weights).unwrap().sample(&mut rng);
-        centroids.push(geom::Point {
-            x: xs[index],
-            y: ys[index],
-        });
+        random_centroid!();
     }
     centroids
 }
 
 fn label_points(
-    xs: &[f32],
-    ys: &[f32],
+    xs: &[f32], /* xs.len() == n */
+    ys: &[f32], /* ys.len() == n */
     labels: &mut Vec<usize>,
     n: usize,
     centroids: &[geom::Point],
@@ -86,8 +87,8 @@ fn label_points(
 }
 
 fn update_centroids(
-    xs: &[f32],
-    ys: &[f32],
+    xs: &[f32], /* xs.len() == n */
+    ys: &[f32], /* ys.len() == n */
     labels: &[usize],
     n: usize,
     centroids: &mut Vec<geom::Point>,
@@ -95,12 +96,8 @@ fn update_centroids(
 ) -> f32 {
     let mut delta: f32 = 0.0;
     if 0 < k {
-        let mut x_cohorts: Vec<Vec<f32>> = Vec::with_capacity(k);
-        let mut y_cohorts: Vec<Vec<f32>> = Vec::with_capacity(k);
-        for _ in 0..k {
-            x_cohorts.push(Vec::with_capacity(n));
-            y_cohorts.push(Vec::with_capacity(n));
-        }
+        let mut x_cohorts: Vec<Vec<f32>> = vec![Vec::with_capacity(n); k];
+        let mut y_cohorts: Vec<Vec<f32>> = vec![Vec::with_capacity(n); k];
         for i in 0..n {
             x_cohorts[labels[i]].push(xs[i]);
             y_cohorts[labels[i]].push(ys[i]);
@@ -120,20 +117,21 @@ fn update_centroids(
 }
 
 pub fn cluster(
-    xs: &[f32],
-    ys: &[f32],
+    xs: &[f32], /* xs.len() == n */
+    ys: &[f32], /* ys.len() == n */
     n: usize,
     k: usize,
-    threshold: f32,
+    threshold: f32, /* 0.0 < threshold */
     seed: u64,
 ) -> (Vec<usize>, u16, f32) {
-    let mut labels: Vec<usize> = Vec::with_capacity(n);
-    for _ in 0..n {
-        labels.push(0);
+    let mut labels: Vec<usize> = vec![0; n];
+    let mut iterations: u16 = 0;
+    let mut error: f32 = 0.0;
+    if threshold <= 0.0 {
+        return (labels, iterations, error);
     }
     let mut centroids: Vec<geom::Point> =
         centroids_plus_plus(xs, ys, n, k, seed);
-    let mut iterations: u16 = 0;
     loop {
         label_points(xs, ys, &mut labels, n, &centroids);
         if update_centroids(xs, ys, &labels, n, &mut centroids, k) < threshold
@@ -143,13 +141,12 @@ pub fn cluster(
             iterations += 1;
         }
     }
-    let mut error: f32 = 0.0;
     for i in 0..n {
-        let distance: f32 = geom::distance(
+        error += geom::distance(
             geom::Point { x: xs[i], y: ys[i] },
             centroids[labels[i]],
-        );
-        error += distance * distance;
+        )
+        .powi(2);
     }
     (labels, iterations, error)
 }
