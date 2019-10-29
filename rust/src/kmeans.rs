@@ -47,7 +47,7 @@ fn centroids_plus_plus(
                     let candidate: f32 = geom::distance(
                         geom::Point { x: xs[j], y: ys[j] },
                         *centroid,
-                    );
+                    ).powi(2);
                     if candidate < distance {
                         distance = candidate
                     }
