@@ -40,7 +40,7 @@ pub fn bounds(points: &[Point]) -> Bounds {
     bounds
 }
 
-pub fn distance(a: Point, b: Point) -> f32 {
+pub fn distance_f32(a: Point, b: Point) -> f32 {
     let x: f32 = a.x - b.x;
     let y: f32 = a.y - b.y;
     ((x * x) + (y * y)).sqrt()

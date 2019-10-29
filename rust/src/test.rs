@@ -1,14 +1,14 @@
 #[cfg(test)]
 mod test {
     #[test]
-    fn distance() {
+    fn distance_f32() {
         macro_rules! assert_distance {
             ($ax:expr, $ay:expr, $bx:expr, $by:expr, $d:expr) => {
                 let a: crate::geom::Point =
                     crate::geom::Point { x: $ax, y: $ay };
                 let b: crate::geom::Point =
                     crate::geom::Point { x: $bx, y: $by };
-                assert_eq!(crate::geom::distance(a, b), $d)
+                assert_eq!(crate::geom::distance_f32(a, b), $d)
             };
         }
         assert_distance!(0.0, 0.0, 3.0, 4.0, 5.0);

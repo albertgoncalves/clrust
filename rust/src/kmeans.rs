@@ -50,7 +50,7 @@ fn centroids_plus_plus(
         for j in 0..n {
             let mut distance: f32 = f32::MAX;
             for centroid in &centroids {
-                let candidate: f32 = geom::distance(
+                let candidate: f32 = geom::distance_f32(
                     geom::Point { x: xs[j], y: ys[j] },
                     *centroid,
                 )
@@ -76,8 +76,10 @@ fn label_points(
     for i in 0..n {
         let mut distance: f32 = f32::MAX;
         for (j, centroid) in centroids.iter().enumerate() {
-            let centroid_distance: f32 =
-                geom::distance(geom::Point { x: xs[i], y: ys[i] }, *centroid);
+            let centroid_distance: f32 = geom::distance_f32(
+                geom::Point { x: xs[i], y: ys[i] },
+                *centroid,
+            );
             if centroid_distance < distance {
                 labels[i] = j;
                 distance = centroid_distance;
@@ -108,7 +110,7 @@ fn update_centroids(
                 math::average_f32(&y_cohorts[i]),
             ) {
                 let update: geom::Point = geom::Point { x, y };
-                delta += geom::distance(centroids[i], update);
+                delta += geom::distance_f32(centroids[i], update);
                 centroids[i] = update;
             }
         }
@@ -142,7 +144,7 @@ pub fn cluster(
         }
     }
     for i in 0..n {
-        error += geom::distance(
+        error += geom::distance_f32(
             geom::Point { x: xs[i], y: ys[i] },
             centroids[labels[i]],
         )
