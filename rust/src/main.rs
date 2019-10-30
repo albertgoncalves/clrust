@@ -124,7 +124,12 @@ fn main() {
                     args.threshold,
                     args.seed,
                 );
-            eprintln!("# of iterations: {}\nerror: {}", iterations, error);
+            eprintln!(
+                "iterations : {}\n\
+                 error      : {}",
+                iterations, //
+                error,
+            );
             write_csv(&xs, &ys, &labels, m);
         }
     }
