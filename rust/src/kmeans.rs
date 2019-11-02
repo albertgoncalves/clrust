@@ -6,18 +6,21 @@ use rand::prelude::{SeedableRng, StdRng};
 use std::f32;
 
 #[allow(dead_code)]
-fn centroids(bounds: &geom::Bounds, k: usize, seed: u64) -> Vec<geom::Point> {
+fn centroids(
+    bounds: &geom::Bounds,
+    k: usize,
+    rng: &mut StdRng,
+) -> Vec<geom::Point> {
     let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
     if 0 < k {
-        let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
         let x_uniform: UniformFloat<f32> =
             UniformFloat::<f32>::new(bounds.min_x, bounds.max_x);
         let y_uniform: UniformFloat<f32> =
             UniformFloat::<f32>::new(bounds.min_y, bounds.max_y);
         for _ in 0..k {
             centroids.push(geom::Point {
-                x: x_uniform.sample(&mut rng),
-                y: y_uniform.sample(&mut rng),
+                x: x_uniform.sample(rng),
+                y: y_uniform.sample(rng),
             });
         }
     }
@@ -30,15 +33,14 @@ fn centroids_plus_plus(
     ys: &[f32], /* ys.len() == n */
     n: usize,
     k: usize,
-    seed: u64,
+    rng: &mut StdRng,
 ) -> Vec<geom::Point> {
-    let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
     let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
     let mut weights: Vec<f32> = vec![1.0; n];
     macro_rules! random_centroid {
         () => {
             let index: usize =
-                WeightedIndex::new(&weights).unwrap().sample(&mut rng);
+                WeightedIndex::new(&weights).unwrap().sample(rng);
             centroids.push(geom::Point {
                 x: xs[index],
                 y: ys[index],
@@ -129,11 +131,9 @@ pub fn cluster(
     let mut labels: Vec<usize> = vec![0; n];
     let mut iterations: u16 = 0;
     let mut error: f32 = 0.0;
-    if threshold <= 0.0 {
-        return (labels, iterations, error);
-    }
+    let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
     let mut centroids: Vec<geom::Point> =
-        centroids_plus_plus(xs, ys, n, k, seed);
+        centroids_plus_plus(xs, ys, n, k, &mut rng);
     loop {
         label_points(xs, ys, &mut labels, n, &centroids);
         if update_centroids(xs, ys, &labels, n, &mut centroids, k) < threshold
