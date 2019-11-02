@@ -14,12 +14,13 @@ else
     index_y=4
     k=5
     threshold=0.05
+    loops=50
     seed=0
     output="$WD/data/output.csv"
     rm "$output" || true
     time tail -n +2 "$WD/data/input.csv" \
         | cargo run --release \
-            $n_columns $index_x $index_y $k $threshold $seed \
+            $n_columns $index_x $index_y $k $threshold $loops $seed \
         > "$output"
     cd "$WD/python" || exit
     time python src/main.py "$output"

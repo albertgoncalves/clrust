@@ -120,11 +120,13 @@ fn update_centroids(
     delta
 }
 
+#[allow(clippy::many_single_char_names)]
 pub fn cluster(
     xs: &[f32],
     ys: &[f32],
     k: usize,
     threshold: f32,
+    loops: usize,
     seed: u64,
 ) -> Option<(Vec<usize>, usize, u16, f32)> {
     let n: usize = xs.len();
@@ -133,25 +135,34 @@ pub fn cluster(
     }
     let mut labels: Vec<usize> = vec![0; n];
     let mut iterations: u16 = 0;
-    let mut error: f32 = 0.0;
+    let mut error: f32 = f32::MAX;
     let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
-    let mut centroids: Vec<geom::Point> =
-        centroids_plus_plus(xs, ys, n, k, &mut rng);
-    loop {
-        label_points(xs, ys, &mut labels, n, &centroids);
-        if update_centroids(xs, ys, &labels, n, &mut centroids, k) < threshold
-        {
-            break;
-        } else {
-            iterations += 1;
+    for _ in 0..loops {
+        let mut centroids: Vec<geom::Point> =
+            centroids_plus_plus(xs, ys, n, k, &mut rng);
+        let mut i: u16 = 0;
+        let mut l: Vec<usize> = vec![0; n];
+        loop {
+            label_points(xs, ys, &mut l, n, &centroids);
+            if update_centroids(xs, ys, &l, n, &mut centroids, k) < threshold {
+                break;
+            } else {
+                i += 1;
+            }
         }
-    }
-    for i in 0..n {
-        error += geom::distance_f32(
-            geom::Point { x: xs[i], y: ys[i] },
-            centroids[labels[i]],
-        )
-        .powi(2);
+        let mut e: f32 = 0.0;
+        for i in 0..n {
+            e += geom::distance_f32(
+                geom::Point { x: xs[i], y: ys[i] },
+                centroids[l[i]],
+            )
+            .powi(2);
+        }
+        if e < error {
+            labels = l;
+            iterations = i;
+            error = e;
+        }
     }
     Some((labels, n, iterations, error))
 }

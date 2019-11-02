@@ -15,6 +15,7 @@ struct Args {
     index_y: usize,
     k: usize,
     threshold: f32,
+    loops: usize,
     seed: u64,
 }
 
@@ -44,13 +45,14 @@ fn read_stdin() -> Result<String, std::io::Error> {
 
 fn parse_args() -> Args {
     let args: Vec<String> = env::args().collect();
-    if args.len() == 7 {
+    if args.len() == 8 {
         if let (
             Ok(n_columns),
             Ok(index_x),
             Ok(index_y),
             Ok(k),
             Ok(threshold),
+            Ok(loops),
             Ok(seed),
         ) = (
             args[1].parse::<usize>(),
@@ -58,7 +60,8 @@ fn parse_args() -> Args {
             args[3].parse::<usize>(),
             args[4].parse::<usize>(),
             args[5].parse::<f32>(),
-            args[6].parse::<u64>(),
+            args[6].parse::<usize>(),
+            args[7].parse::<u64>(),
         ) {
             return Args {
                 n_columns,
@@ -66,13 +69,14 @@ fn parse_args() -> Args {
                 index_y,
                 k,
                 threshold,
+                loops,
                 seed,
             };
         }
     }
     eprintln!(
         "usage: {} <n_columns: int> <index_x: int> <index_y: int> <k: int> \
-         <threshold:float> <seed:int>",
+         <threshold: float> <loops: int> <seed: int>",
         &args[0]
     );
     exit(1);
@@ -114,9 +118,14 @@ fn main() {
         if let (Some(()), Some(())) =
             (math::unit_scale_f32(&mut xs), math::unit_scale_f32(&mut ys))
         {
-            if let Some((labels, m, iterations, error)) =
-                kmeans::cluster(&xs, &ys, args.k, args.threshold, args.seed)
-            {
+            if let Some((labels, m, iterations, error)) = kmeans::cluster(
+                &xs,
+                &ys,
+                args.k,
+                args.threshold,
+                args.loops,
+                args.seed,
+            ) {
                 eprintln!(
                     "iterations : {}\n\
                      n          : {}\n\
