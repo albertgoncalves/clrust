@@ -69,9 +69,9 @@ fn centroids_plus_plus(
 }
 
 fn label_points(
-    xs: &[f32], /* xs.len() == n */
-    ys: &[f32], /* ys.len() == n */
-    labels: &mut Vec<usize>,
+    xs: &[f32],              /* xs.len() == n */
+    ys: &[f32],              /* ys.len() == n */
+    labels: &mut Vec<usize>, /* labels.len() == n */
     n: usize,
     centroids: &[geom::Point],
 ) {
@@ -91,9 +91,9 @@ fn label_points(
 }
 
 fn update_centroids(
-    xs: &[f32], /* xs.len() == n */
-    ys: &[f32], /* ys.len() == n */
-    labels: &[usize],
+    xs: &[f32],       /* xs.len() == n */
+    ys: &[f32],       /* ys.len() == n */
+    labels: &[usize], /* labels.len() == n */
     n: usize,
     centroids: &mut Vec<geom::Point>,
     k: usize,
@@ -121,13 +121,16 @@ fn update_centroids(
 }
 
 pub fn cluster(
-    xs: &[f32], /* xs.len() == n */
-    ys: &[f32], /* ys.len() == n */
-    n: usize,
+    xs: &[f32],
+    ys: &[f32],
     k: usize,
-    threshold: f32, /* 0.0 < threshold */
+    threshold: f32,
     seed: u64,
-) -> (Vec<usize>, u16, f32) {
+) -> Option<(Vec<usize>, usize, u16, f32)> {
+    let n: usize = xs.len();
+    if (n == 0) || (n != ys.len()) || (k == 0) || (threshold <= 0.0) {
+        return None;
+    }
     let mut labels: Vec<usize> = vec![0; n];
     let mut iterations: u16 = 0;
     let mut error: f32 = 0.0;
@@ -150,5 +153,5 @@ pub fn cluster(
         )
         .powi(2);
     }
-    (labels, iterations, error)
+    Some((labels, n, iterations, error))
 }
