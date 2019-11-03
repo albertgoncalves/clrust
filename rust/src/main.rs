@@ -43,7 +43,7 @@ fn read_stdin() -> Result<String, std::io::Error> {
     stdin().read_to_string(&mut buffer).map(|_| buffer)
 }
 
-fn parse_args() -> Args {
+fn parse_args() -> Option<Args> {
     let args: Vec<String> = env::args().collect();
     if args.len() == 8 {
         if let (
@@ -63,23 +63,20 @@ fn parse_args() -> Args {
             args[6].parse::<usize>(),
             args[7].parse::<u64>(),
         ) {
-            return Args {
-                n_columns,
-                index_x,
-                index_y,
-                k,
-                threshold,
-                loops,
-                seed,
-            };
+            if 0 < k {
+                return Some(Args {
+                    n_columns,
+                    index_x,
+                    index_y,
+                    k,
+                    threshold,
+                    loops,
+                    seed,
+                });
+            }
         }
     }
-    eprintln!(
-        "usage: {} <n_columns: int> <index_x: int> <index_y: int> <k: int> \
-         <threshold: float> <loops: int> <seed: int>",
-        &args[0]
-    );
-    exit(1);
+    None
 }
 
 fn write_csv(xs: &[f32], ys: &[f32], labels: &[usize], n: usize) {
@@ -101,8 +98,7 @@ fn write_csv(xs: &[f32], ys: &[f32], labels: &[usize], n: usize) {
 }
 
 fn main() {
-    if let Ok(buffer) = read_stdin() {
-        let args: Args = parse_args();
+    if let (Ok(buffer), Some(args)) = (read_stdin(), parse_args()) {
         let lines: Vec<&str> = buffer.split('\n').collect::<Vec<&str>>();
         let n: usize = lines.len();
         let mut xs: Vec<f32> = Vec::with_capacity(n);
@@ -135,7 +131,13 @@ fn main() {
                     error,
                 );
                 write_csv(&xs, &ys, &labels, m);
+                return;
             }
         }
     }
+    eprintln!(
+        "USAGE\tSTDIN\n\tARGS\t<n_columns: int> <index_x: int> <index_y: int> \
+         <k: int> <threshold: float> <loops: int> <seed: int>",
+    );
+    exit(1)
 }
