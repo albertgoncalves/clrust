@@ -22,7 +22,7 @@ pub fn std_dev_f32(xs: &[f32]) -> Option<f32> {
     })
 }
 
-/* https://en.wikipedia.org/wiki/Feature_scaling */
+/* NOTE: https://en.wikipedia.org/wiki/Feature_scaling */
 pub fn unit_scale_f32(xs: &mut Vec<f32>) -> Option<()> {
     if let (Some(xs_avg), Some(xs_std)) = (average_f32(&xs), std_dev_f32(&xs))
     {

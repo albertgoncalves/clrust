@@ -4,8 +4,9 @@ mod math;
 mod test;
 
 use std::env;
-use std::io::{stdin, Read};
-use std::process::exit;
+use std::io;
+use std::io::Read;
+use std::process;
 
 const DELIMITER: char = ',';
 
@@ -31,19 +32,20 @@ fn row_to_point(
         && (index_x < n)
         && (index_y < n)
     {
-        return items[index_x].parse().ok().and_then(|x| {
-            items[index_y].parse().ok().and_then(|y| Some((x, y)))
-        });
+        return items[index_x]
+            .parse()
+            .ok()
+            .and_then(|x| items[index_y].parse().ok().map(|y| (x, y)));
     }
     None
 }
 
-fn read_stdin() -> Result<String, std::io::Error> {
+fn get_stdin() -> Result<String, std::io::Error> {
     let mut buffer: String = String::new();
-    stdin().read_to_string(&mut buffer).map(|_| buffer)
+    io::stdin().read_to_string(&mut buffer).map(|_| buffer)
 }
 
-fn parse_args() -> Option<Args> {
+fn get_args() -> Result<Args, String> {
     let args: Vec<String> = env::args().collect();
     if args.len() == 8 {
         if let (
@@ -64,7 +66,7 @@ fn parse_args() -> Option<Args> {
             args[7].parse::<u64>(),
         ) {
             if 0 < k {
-                return Some(Args {
+                return Ok(Args {
                     n_columns,
                     index_x,
                     index_y,
@@ -76,7 +78,7 @@ fn parse_args() -> Option<Args> {
             }
         }
     }
-    None
+    Err(args[0].to_owned())
 }
 
 fn write_csv(xs: &[f32], ys: &[f32], labels: &[usize], n: usize) {
@@ -98,46 +100,64 @@ fn write_csv(xs: &[f32], ys: &[f32], labels: &[usize], n: usize) {
 }
 
 fn main() {
-    if let (Ok(buffer), Some(args)) = (read_stdin(), parse_args()) {
-        let lines: Vec<&str> = buffer.split('\n').collect::<Vec<&str>>();
-        let n: usize = lines.len();
-        let mut xs: Vec<f32> = Vec::with_capacity(n);
-        let mut ys: Vec<f32> = Vec::with_capacity(n);
-        for line in lines {
-            if let Some((x, y)) =
-                row_to_point(line, args.n_columns, args.index_x, args.index_y)
-            {
-                xs.push(x);
-                ys.push(y);
+    match get_args() {
+        Ok(args) => {
+            if let Ok(buffer) = get_stdin() {
+                let lines: Vec<&str> =
+                    buffer.split('\n').collect::<Vec<&str>>();
+                let n: usize = lines.len();
+                let mut xs: Vec<f32> = Vec::with_capacity(n);
+                let mut ys: Vec<f32> = Vec::with_capacity(n);
+                for line in lines {
+                    if let Some((x, y)) = row_to_point(
+                        line,
+                        args.n_columns,
+                        args.index_x,
+                        args.index_y,
+                    ) {
+                        xs.push(x);
+                        ys.push(y);
+                    }
+                }
+                if let (Some(()), Some(())) = (
+                    math::unit_scale_f32(&mut xs),
+                    math::unit_scale_f32(&mut ys),
+                ) {
+                    if let Some((labels, m, iterations, error)) =
+                        kmeans::cluster(
+                            &xs,
+                            &ys,
+                            args.k,
+                            args.threshold,
+                            args.loops,
+                            args.seed,
+                        )
+                    {
+                        eprintln!(
+                            "iterations : {}\n\
+                             n          : {}\n\
+                             error      : {}",
+                            iterations, //
+                            m,          //
+                            error,
+                        );
+                        write_csv(&xs, &ys, &labels, m);
+                        return;
+                    }
+                }
             }
         }
-        if let (Some(()), Some(())) =
-            (math::unit_scale_f32(&mut xs), math::unit_scale_f32(&mut ys))
-        {
-            if let Some((labels, m, iterations, error)) = kmeans::cluster(
-                &xs,
-                &ys,
-                args.k,
-                args.threshold,
-                args.loops,
-                args.seed,
-            ) {
-                eprintln!(
-                    "iterations : {}\n\
-                     n          : {}\n\
-                     error      : {}",
-                    iterations, //
-                    m,          //
-                    error,
-                );
-                write_csv(&xs, &ys, &labels, m);
-                return;
-            }
-        }
+        Err(arg) => eprintln!(
+            "STDIN {} N_COLUMNS INDEX_X INDEX_Y K THRESHOLD LOOPS SEED\
+             \n  N_COLUMNS : int\
+             \n  INDEX_X   : int\
+             \n  INDEX_Y   : int\
+             \n  K         : int\
+             \n  THRESHOLD : float\
+             \n  LOOPS     : int\
+             \n  SEED      : int",
+            arg,
+        ),
     }
-    eprintln!(
-        "USAGE\tSTDIN\n\tARGS\t<n_columns: int> <index_x: int> <index_y: int> \
-         <k: int> <threshold: float> <loops: int> <seed: int>",
-    );
-    exit(1)
+    process::exit(1)
 }

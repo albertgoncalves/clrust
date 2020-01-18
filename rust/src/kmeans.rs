@@ -27,10 +27,10 @@ fn centroids(
     centroids
 }
 
-/* https://en.wikipedia.org/wiki/K-means%2B%2B */
+/* NOTE: https://en.wikipedia.org/wiki/K-means%2B%2B */
 fn centroids_plus_plus(
-    xs: &[f32], /* xs.len() == n */
-    ys: &[f32], /* ys.len() == n */
+    xs: &[f32], /* NOTE: xs.len() == n */
+    ys: &[f32], /* NOTE: ys.len() == n */
     n: usize,
     k: usize,
     rng: &mut StdRng,
@@ -69,9 +69,9 @@ fn centroids_plus_plus(
 }
 
 fn label_points(
-    xs: &[f32],              /* xs.len() == n */
-    ys: &[f32],              /* ys.len() == n */
-    labels: &mut Vec<usize>, /* labels.len() == n */
+    xs: &[f32],              /* NOTE: xs.len() == n */
+    ys: &[f32],              /* NOTE: ys.len() == n */
+    labels: &mut Vec<usize>, /* NOTE: labels.len() == n */
     n: usize,
     centroids: &[geom::Point],
 ) {
@@ -91,9 +91,9 @@ fn label_points(
 }
 
 fn update_centroids(
-    xs: &[f32],       /* xs.len() == n */
-    ys: &[f32],       /* ys.len() == n */
-    labels: &[usize], /* labels.len() == n */
+    xs: &[f32],       /* NOTE: xs.len() == n */
+    ys: &[f32],       /* NOTE: ys.len() == n */
+    labels: &[usize], /* NOTE: labels.len() == n */
     n: usize,
     centroids: &mut Vec<geom::Point>,
     k: usize,
