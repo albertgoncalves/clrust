@@ -11,7 +11,7 @@ export WD=$PWD
 export RUSTUP_HOME="$WD/.rustup_home"
 export CARGO_HOME="$WD/.cargo_home"
 
-for x in $RUSTUP_HOME $CARGO_HOME/bin $WD/python/out; do
+for x in $RUSTUP_HOME/downloads $CARGO_HOME/bin $WD/python/out; do
     if [ ! -d "$x" ]; then
         mkdir -p "$x"
     fi
@@ -32,4 +32,4 @@ rustup update
 export RUSTFLAGS="-C target-cpu=native"
 
 alias rustfmt="rustfmt -v"
-alias clippy="cargo clippy -- -D warnings -W clippy::pedantic"
+alias clippy="cargo clippy --all-targets -- -D warnings -W clippy::pedantic"
