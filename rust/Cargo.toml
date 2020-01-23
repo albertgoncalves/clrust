@@ -7,6 +7,4 @@ edition = "2018"
 rand = "0.7"
 
 [profile.release]
-opt-level = 3
 codegen-units = 1
-debug = 2
