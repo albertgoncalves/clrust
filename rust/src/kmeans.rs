@@ -12,7 +12,7 @@ fn centroids(
     rng: &mut StdRng,
 ) -> Vec<geom::Point> {
     let mut centroids: Vec<geom::Point> = Vec::with_capacity(k);
-    if 0 < k {
+    if k != 0 {
         let x_uniform: UniformFloat<f32> =
             UniformFloat::<f32>::new(bounds.min_x, bounds.max_x);
         let y_uniform: UniformFloat<f32> =
@@ -99,7 +99,7 @@ fn update_centroids(
     k: usize,
 ) -> f32 {
     let mut delta: f32 = 0.0;
-    if 0 < k {
+    if k != 0 {
         let mut x_cohorts: Vec<Vec<f32>> = vec![Vec::with_capacity(n); k];
         let mut y_cohorts: Vec<Vec<f32>> = vec![Vec::with_capacity(n); k];
         for i in 0..n {

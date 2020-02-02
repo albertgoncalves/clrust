@@ -65,7 +65,7 @@ fn get_args() -> Result<Args, String> {
             args[6].parse::<usize>(),
             args[7].parse::<u64>(),
         ) {
-            if 0 < k {
+            if k != 0 {
                 return Ok(Args {
                     n_columns,
                     index_x,
